@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 import torch
 from torch import Tensor
 
-from src.utils.box_ops import generalized_box_iou
+from src.utils.box_ops import generalized_box_iou, box_iou
 
 
 class HungarianMatcher:
@@ -41,7 +41,12 @@ class HungarianMatcher:
             # GIoU cost on xyxy
             out_xyxy = box_cxcywh_to_xyxy_abs(out_boxes, targets[b]["size"])  # [Q, 4]
             tgt_xyxy = box_cxcywh_to_xyxy_abs(tgt_boxes, targets[b]["size"])  # [N, 4]
-            cost_giou = -generalized_box_iou(out_xyxy, tgt_xyxy)
+            try:
+                cost_giou = -generalized_box_iou(out_xyxy, tgt_xyxy)
+            except Exception:
+                # Fallback to simple IoU if GIoU fails
+                iou, _ = box_iou(out_xyxy, tgt_xyxy)
+                cost_giou = -iou
 
             C = self.cls_cost * cost_cls + self.l1_cost * cost_l1 + self.giou_cost * cost_giou
             # Debug: ensure finite costs before Hungarian

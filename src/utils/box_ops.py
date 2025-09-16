@@ -35,7 +35,7 @@ def box_iou(boxes1: torch.Tensor, boxes2: torch.Tensor) -> tuple[torch.Tensor, t
 
 
 def generalized_box_iou(boxes1: torch.Tensor, boxes2: torch.Tensor) -> torch.Tensor:
-    iou, _ = box_iou(boxes1, boxes2)
+    iou, union = box_iou(boxes1, boxes2)
 
     lt = torch.min(boxes1[:, None, :2], boxes2[:, :2])
     rb = torch.max(boxes1[:, None, 2:], boxes2[:, 2:])
@@ -50,9 +50,14 @@ def generalized_box_iou(boxes1: torch.Tensor, boxes2: torch.Tensor) -> torch.Ten
     inter = wh_i[:, :, 0] * wh_i[:, :, 1]
     union = area1[:, None] + area2 - inter
 
-    # Avoid division by zero
+    # Handle edge cases for GIoU
     area_c = area_c.clamp(min=1e-7)
+    union = union.clamp(min=1e-7)
+    
+    # Avoid division by zero and ensure numerical stability
     giou = iou - (area_c - union) / area_c
+    giou = giou.clamp(min=-1.0, max=1.0)
+    
     return giou
 
 
