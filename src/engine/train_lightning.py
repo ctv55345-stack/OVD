@@ -40,12 +40,13 @@ def main(cfg: DictConfig):
     logger = CSVLogger("outputs", name="pl")
     trainer = L.Trainer(
         max_epochs=cfg.train.epochs,
-        precision=16 if cfg.train.amp else 32,
+        precision=cfg.train.precision if cfg.train.amp else 32,
         logger=logger,
         gradient_clip_val=0.0,
         deterministic=False,
         devices=1,
         accelerator="gpu" if cfg.train.use_gpu else "cpu",
+        detect_anomaly=cfg.train.detect_anomaly,
     )
 
     trainer.fit(model, datamodule=data)

@@ -47,8 +47,7 @@ class VODLightningModule(L.LightningModule):
         loss = l_cls + l_box
         
         # Check for NaN/Inf
-        # Sanitize loss to avoid AMP scaler assertion; keep graph via nan_to_num
-        loss = torch.nan_to_num(loss, nan=0.0, posinf=0.0, neginf=0.0)
+        # No sanitization: allow Lightning detect_anomaly to catch invalid grads
             
         self.log("train/loss", loss, prog_bar=True)
         self.log("train/loss_cls", l_cls, prog_bar=False)

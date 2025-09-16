@@ -13,6 +13,8 @@ train:
   batch_size: 16
   epochs: 40
   amp: true
+  precision: 16
+  detect_anomaly: true
   base_lr: 2.0e-4
   weight_decay: 1.0e-4
   num_workers: 8
