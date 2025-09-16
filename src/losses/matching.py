@@ -48,13 +48,24 @@ class HungarianMatcher:
             if not torch.isfinite(C).all():
                 def _summ(x: Tensor, name: str):
                     x_flat = x.reshape(-1)
+                    finite_mask = torch.isfinite(x_flat)
+                    num_non_finite = (~finite_mask).sum().item()
+                    if finite_mask.any():
+                        x_fin = x_flat[finite_mask]
+                        mn = x_fin.min().item()
+                        mx = x_fin.max().item()
+                        sample = x_fin[:10].detach().cpu().tolist()
+                    else:
+                        mn = None
+                        mx = None
+                        sample = []
                     return {
                         "name": name,
                         "shape": list(x.shape),
-                        "num_nan": (~torch.isfinite(x_flat)).sum().item(),
-                        "min": torch.nanmin(x_flat).item() if x_flat.numel() > 0 else None,
-                        "max": torch.nanmax(x_flat).item() if x_flat.numel() > 0 else None,
-                        "sample": x_flat[:10].detach().cpu().tolist() if x_flat.numel() > 0 else [],
+                        "num_non_finite": num_non_finite,
+                        "min": mn,
+                        "max": mx,
+                        "sample": sample,
                     }
                 debug_info = {
                     "out_prob": _summ(out_prob, "out_prob"),
