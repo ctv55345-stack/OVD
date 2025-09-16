@@ -46,19 +46,12 @@ class HungarianMatcher:
             C = self.cls_cost * cost_cls + self.l1_cost * cost_l1 + self.giou_cost * cost_giou
             C = C.cpu()
 
-            # Hungarian assignment via scipy if available; fallback to torch min matching (greedy)
-            try:
-                import numpy as np
-                from scipy.optimize import linear_sum_assignment
+            # Hungarian assignment via scipy (optimal matching)
+            from scipy.optimize import linear_sum_assignment
+            row_ind, col_ind = linear_sum_assignment(C.numpy())
+            i = torch.as_tensor(row_ind, dtype=torch.long)
+            j = torch.as_tensor(col_ind, dtype=torch.long)
 
-                row_ind, col_ind = linear_sum_assignment(C.numpy())
-                i = torch.as_tensor(row_ind, dtype=torch.long)
-                j = torch.as_tensor(col_ind, dtype=torch.long)
-            except Exception:
-                # Greedy fallback
-                q_idx = torch.arange(C.size(0))
-                j = C.argmin(dim=1)
-                i = q_idx
 
             indices.append((i, j))
 

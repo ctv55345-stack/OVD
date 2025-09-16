@@ -40,15 +40,20 @@ class VODLightningModule(L.LightningModule):
 
     def training_step(self, batch, batch_idx):
         images, targets = batch
-        phrases = [t["text"] for t in targets]
-        # text features computed but not deeply fused in this tiny baseline
-        _ = self.text(phrases)
         out = self(images)
         indices = self.matcher(out, targets)
         l_cls = loss_labels(out, targets, indices, self.cls_w)
         l_box = loss_boxes(out, targets, indices, self.l1_w, self.giou_w)
         loss = l_cls + l_box
+        
+        # Check for NaN/Inf
+        if torch.isnan(loss) or torch.isinf(loss):
+            print(f"Warning: Invalid loss detected - cls: {l_cls.item():.4f}, box: {l_box.item():.4f}")
+            loss = torch.tensor(0.0, device=loss.device, requires_grad=True)
+            
         self.log("train/loss", loss, prog_bar=True)
+        self.log("train/loss_cls", l_cls, prog_bar=False)
+        self.log("train/loss_box", l_box, prog_bar=False)
         return loss
 
     def validation_step(self, batch, batch_idx):

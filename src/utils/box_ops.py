@@ -50,7 +50,9 @@ def generalized_box_iou(boxes1: torch.Tensor, boxes2: torch.Tensor) -> torch.Ten
     inter = wh_i[:, :, 0] * wh_i[:, :, 1]
     union = area1[:, None] + area2 - inter
 
-    giou = iou - (area_c - union) / (area_c + 1e-7)
+    # Avoid division by zero
+    area_c = area_c.clamp(min=1e-7)
+    giou = iou - (area_c - union) / area_c
     return giou
 
 

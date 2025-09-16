@@ -15,7 +15,8 @@ def loss_labels(outputs: Dict[str, Tensor], targets: List[Dict[str, Tensor]], in
 
     target_classes = torch.zeros((B, Q), dtype=torch.long, device=src_logits.device)
     for b, (src_idx, tgt_idx) in enumerate(indices):
-        target_classes[b, src_idx] = 1  # positive class index 1
+        if len(src_idx) > 0:
+            target_classes[b, src_idx] = 1  # positive class index 1
 
     loss = F.cross_entropy(src_logits.flatten(0, 1), target_classes.flatten(0, 1))
     return cls_weight * loss
@@ -44,9 +45,12 @@ def loss_boxes(outputs: Dict[str, Tensor], targets: List[Dict[str, Tensor]], ind
         giou_loss = giou_loss + (1.0 - giou.diag()).sum()
         num_pos += len(src_idx)
 
-    num_pos = max(num_pos, 1)
-    l1_loss = l1_loss / num_pos
-    giou_loss = giou_loss / num_pos
+    if num_pos > 0:
+        l1_loss = l1_loss / num_pos
+        giou_loss = giou_loss / num_pos
+    else:
+        l1_loss = torch.tensor(0.0, device=src_boxes.device)
+        giou_loss = torch.tensor(0.0, device=src_boxes.device)
     return l1_weight * l1_loss + giou_weight * giou_loss
 
 
