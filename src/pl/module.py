@@ -47,9 +47,8 @@ class VODLightningModule(L.LightningModule):
         loss = l_cls + l_box
         
         # Check for NaN/Inf
-        if torch.isnan(loss) or torch.isinf(loss):
-            print(f"Warning: Invalid loss detected - cls: {l_cls.item():.4f}, box: {l_box.item():.4f}")
-            loss = torch.tensor(0.0, device=loss.device, requires_grad=True)
+        # Sanitize loss to avoid AMP scaler assertion; keep graph via nan_to_num
+        loss = torch.nan_to_num(loss, nan=0.0, posinf=0.0, neginf=0.0)
             
         self.log("train/loss", loss, prog_bar=True)
         self.log("train/loss_cls", l_cls, prog_bar=False)

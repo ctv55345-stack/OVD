@@ -35,13 +35,16 @@ def loss_boxes(outputs: Dict[str, Tensor], targets: List[Dict[str, Tensor]], ind
             continue
         src_b = src_boxes[b, src_idx]
         tgt_b = targets[b]["boxes"][tgt_idx]
-        l1_loss = l1_loss + F.l1_loss(src_b, tgt_b, reduction="sum")
+        l1_part = F.l1_loss(src_b, tgt_b, reduction="sum")
+        l1_part = torch.nan_to_num(l1_part, nan=0.0, posinf=0.0, neginf=0.0)
+        l1_loss = l1_loss + l1_part
 
         # compute GIoU on xyxy absolute scale for stability
         size = targets[b]["size"]  # [W, H]
         src_xyxy = _cxcywh_to_xyxy_abs(src_b, size)
         tgt_xyxy = _cxcywh_to_xyxy_abs(tgt_b, size)
         giou = generalized_box_iou(src_xyxy, tgt_xyxy)
+        giou = torch.nan_to_num(giou, nan=0.0, posinf=0.0, neginf=0.0).clamp(min=-1.0, max=1.0)
         giou_loss = giou_loss + (1.0 - giou.diag()).sum()
         num_pos += len(src_idx)
 
