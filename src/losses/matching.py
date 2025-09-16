@@ -43,8 +43,13 @@ class HungarianMatcher:
             tgt_xyxy = box_cxcywh_to_xyxy_abs(tgt_boxes, targets[b]["size"])  # [N, 4]
             cost_giou = -generalized_box_iou(out_xyxy, tgt_xyxy)
 
+            # Sanitize costs to avoid NaN/Inf
+            cost_cls = torch.nan_to_num(cost_cls, nan=1e6, posinf=1e6, neginf=1e6)
+            cost_l1 = torch.nan_to_num(cost_l1, nan=1e6, posinf=1e6, neginf=1e6)
+            cost_giou = torch.nan_to_num(cost_giou, nan=1e6, posinf=1e6, neginf=1e6)
+
             C = self.cls_cost * cost_cls + self.l1_cost * cost_l1 + self.giou_cost * cost_giou
-            C = C.cpu()
+            C = torch.nan_to_num(C, nan=1e6, posinf=1e6, neginf=1e6).cpu()
 
             # Hungarian assignment via scipy (optimal matching)
             from scipy.optimize import linear_sum_assignment
