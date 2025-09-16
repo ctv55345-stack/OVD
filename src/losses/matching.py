@@ -44,6 +44,31 @@ class HungarianMatcher:
             cost_giou = -generalized_box_iou(out_xyxy, tgt_xyxy)
 
             C = self.cls_cost * cost_cls + self.l1_cost * cost_l1 + self.giou_cost * cost_giou
+            # Debug: ensure finite costs before Hungarian
+            if not torch.isfinite(C).all():
+                def _summ(x: Tensor, name: str):
+                    x_flat = x.reshape(-1)
+                    return {
+                        "name": name,
+                        "shape": list(x.shape),
+                        "num_nan": (~torch.isfinite(x_flat)).sum().item(),
+                        "min": torch.nanmin(x_flat).item() if x_flat.numel() > 0 else None,
+                        "max": torch.nanmax(x_flat).item() if x_flat.numel() > 0 else None,
+                        "sample": x_flat[:10].detach().cpu().tolist() if x_flat.numel() > 0 else [],
+                    }
+                debug_info = {
+                    "out_prob": _summ(out_prob, "out_prob"),
+                    "out_boxes": _summ(out_boxes, "out_boxes"),
+                    "tgt_boxes": _summ(tgt_boxes, "tgt_boxes"),
+                    "out_xyxy": _summ(out_xyxy, "out_xyxy"),
+                    "tgt_xyxy": _summ(tgt_xyxy, "tgt_xyxy"),
+                    "cost_cls": _summ(cost_cls, "cost_cls"),
+                    "cost_l1": _summ(cost_l1, "cost_l1"),
+                    "cost_giou": _summ(cost_giou, "cost_giou"),
+                    "C": _summ(C, "C"),
+                }
+                raise ValueError(f"Non-finite entries in cost matrix C. Debug: {debug_info}")
+
             C = C.cpu()
 
             # Hungarian assignment via scipy (optimal matching)
