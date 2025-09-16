@@ -1,0 +1,31 @@
+model:
+  backbone: resnet18
+  backbone_pretrained: true
+  hidden_dim: 256
+  num_decoder_layers: 3
+  num_heads: 4
+  num_queries: 100
+  text_encoder: distilbert-base-uncased
+  text_max_len: 32
+
+train:
+  image_size: 640
+  batch_size: 16
+  epochs: 40
+  amp: true
+  base_lr: 2.0e-4
+  weight_decay: 1.0e-4
+  num_workers: 8
+  use_gpu: true
+
+loss:
+  cls_weight: 2.0
+  l1_weight: 5.0
+  giou_weight: 2.0
+
+data:
+  root: data
+  train_list: data/train.txt
+  val_list: data/val.txt
+  test_list: data/test.txt
+
