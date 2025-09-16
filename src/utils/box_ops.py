@@ -39,24 +39,24 @@ def generalized_box_iou(boxes1: torch.Tensor, boxes2: torch.Tensor) -> torch.Ten
 
     lt = torch.min(boxes1[:, None, :2], boxes2[:, :2])
     rb = torch.max(boxes1[:, None, 2:], boxes2[:, 2:])
-    wh = (rb - lt).clamp(min=0)
+    wh = (rb - lt).clamp(min=1e-6)  # Larger epsilon for FP16 stability
     area_c = wh[:, :, 0] * wh[:, :, 1]
 
-    area1 = (boxes1[:, 2] - boxes1[:, 0]).clamp(min=0) * (boxes1[:, 3] - boxes1[:, 1]).clamp(min=0)
-    area2 = (boxes2[:, 2] - boxes2[:, 0]).clamp(min=0) * (boxes2[:, 3] - boxes2[:, 1]).clamp(min=0)
+    area1 = (boxes1[:, 2] - boxes1[:, 0]).clamp(min=1e-6) * (boxes1[:, 3] - boxes1[:, 1]).clamp(min=1e-6)
+    area2 = (boxes2[:, 2] - boxes2[:, 0]).clamp(min=1e-6) * (boxes2[:, 3] - boxes2[:, 1]).clamp(min=1e-6)
     lt_i = torch.max(boxes1[:, None, :2], boxes2[:, :2])
     rb_i = torch.min(boxes1[:, None, 2:], boxes2[:, 2:])
     wh_i = (rb_i - lt_i).clamp(min=0)
     inter = wh_i[:, :, 0] * wh_i[:, :, 1]
     union = area1[:, None] + area2 - inter
 
-    # Handle edge cases for GIoU
-    area_c = area_c.clamp(min=1e-7)
-    union = union.clamp(min=1e-7)
+    # FP16-friendly computation
+    union = union.clamp(min=1e-6)
+    area_c = area_c.clamp(min=1e-6)
     
-    # Avoid division by zero and ensure numerical stability
+    # Compute GIoU with better numerical stability
     giou = iou - (area_c - union) / area_c
-    giou = giou.clamp(min=-1.0, max=1.0)
+    giou = torch.clamp(giou, min=-1.0, max=1.0)
     
     return giou
 

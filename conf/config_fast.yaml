@@ -9,15 +9,15 @@ model:
   text_max_len: 32
 
 train:
-  image_size: 640
+  image_size: 512  # Smaller for speed
   batch_size: 32
   epochs: 40
   amp: true
   precision: 16
-  detect_anomaly: false  # Disable for speed
+  detect_anomaly: false
   base_lr: 2.0e-4
   weight_decay: 1.0e-4
-  num_workers: 4  # Reduced but still parallel
+  num_workers: 4
   use_gpu: true
 
 loss:
@@ -30,4 +30,3 @@ data:
   train_list: data/train.txt
   val_list: data/val.txt
   test_list: data/test.txt
-

@@ -41,12 +41,9 @@ class HungarianMatcher:
             # GIoU cost on xyxy
             out_xyxy = box_cxcywh_to_xyxy_abs(out_boxes, targets[b]["size"])  # [Q, 4]
             tgt_xyxy = box_cxcywh_to_xyxy_abs(tgt_boxes, targets[b]["size"])  # [N, 4]
-            try:
-                cost_giou = -generalized_box_iou(out_xyxy, tgt_xyxy)
-            except Exception:
-                # Fallback to simple IoU if GIoU fails
-                iou, _ = box_iou(out_xyxy, tgt_xyxy)
-                cost_giou = -iou
+            # Use FP32 for Hungarian matching to avoid numerical issues
+            with torch.cuda.amp.autocast(enabled=False):
+                cost_giou = -generalized_box_iou(out_xyxy.float(), tgt_xyxy.float())
 
             C = self.cls_cost * cost_cls + self.l1_cost * cost_l1 + self.giou_cost * cost_giou
             # Debug: ensure finite costs before Hungarian
