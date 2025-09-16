@@ -10,7 +10,7 @@ model:
 
 train:
   image_size: 640
-  batch_size: 64
+  batch_size: 32
   epochs: 40
   amp: true
   precision: 16

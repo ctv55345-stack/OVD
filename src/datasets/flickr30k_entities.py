@@ -110,6 +110,13 @@ class Flickr30kEntitiesPhraseDataset(Dataset):
         boxes_c[:, 1] = boxes_c[:, 1] / H
         boxes_c[:, 2] = boxes_c[:, 2] / W
         boxes_c[:, 3] = boxes_c[:, 3] / H
+        # ensure non-degenerate boxes in normalized coords
+        eps = 1e-6
+        if boxes_c.numel() > 0:
+            boxes_c[:, 2] = boxes_c[:, 2].clamp(min=eps, max=1.0)
+            boxes_c[:, 3] = boxes_c[:, 3].clamp(min=eps, max=1.0)
+            boxes_c[:, 0] = boxes_c[:, 0].clamp(min=0.0, max=1.0)
+            boxes_c[:, 1] = boxes_c[:, 1].clamp(min=0.0, max=1.0)
 
         target = {
             "boxes": boxes_c,
