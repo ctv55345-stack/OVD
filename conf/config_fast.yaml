@@ -15,13 +15,13 @@ train:
   amp: true
   precision: 16
   detect_anomaly: false
-  base_lr: 2.0e-4
+  base_lr: 5.0e-4  # Higher LR for faster learning
   weight_decay: 1.0e-4
   num_workers: 4
   use_gpu: true
 
 loss:
-  cls_weight: 2.0
+  cls_weight: 1.0  # Reduce classification weight
   l1_weight: 5.0
   giou_weight: 2.0
 

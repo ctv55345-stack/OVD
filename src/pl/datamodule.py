@@ -9,7 +9,7 @@ from src.datasets.flickr30k_entities import Flickr30kEntitiesPhraseDataset, coll
 
 
 class Flickr30kDataModule(L.LightningDataModule):
-    def __init__(self, data_root: str = "data", train_list: str = "data/train.txt", val_list: str = "data/val.txt", test_list: str = "data/test.txt", image_size: int = 640, batch_size: int = 16, num_workers: int = 8) -> None:
+    def __init__(self, data_root: str = "data", train_list: str = "data/train.txt", val_list: str = "data/val.txt", test_list: str = "data/test.txt", image_size: int = 384, batch_size: int = 8, num_workers: int = 2) -> None:
         super().__init__()
         self.data_root = data_root
         self.train_list = train_list

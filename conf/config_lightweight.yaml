@@ -1,0 +1,32 @@
+model:
+  backbone: resnet18
+  backbone_pretrained: true
+  hidden_dim: 128  # Giảm từ 256 xuống 128
+  num_decoder_layers: 2  # Giảm từ 3 xuống 2
+  num_heads: 2  # Giảm từ 4 xuống 2
+  num_queries: 50  # Giảm từ 100 xuống 50
+  text_encoder: distilbert-base-uncased
+  text_max_len: 16  # Giảm từ 32 xuống 16
+
+train:
+  image_size: 384  # Giảm từ 512 xuống 384
+  batch_size: 8  # Giảm từ 32 xuống 8
+  epochs: 5  # Test nhanh chỉ 5 epochs
+  amp: true
+  precision: 16
+  detect_anomaly: false
+  base_lr: 1.0e-3  # Tăng LR để học nhanh hơn
+  weight_decay: 1.0e-4
+  num_workers: 2  # Giảm workers
+  use_gpu: true
+
+loss:
+  cls_weight: 1.0
+  l1_weight: 5.0
+  giou_weight: 2.0
+
+data:
+  root: data
+  train_list: data/train.txt
+  val_list: data/val.txt
+  test_list: data/test.txt
